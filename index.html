@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <meta name="apple-mobile-web-app-title" content="PWA小工具">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
+    <title>PWA 測試小工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .update-time {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        li {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 1rem;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        /* 斑馬紋設計：偶數行使用極淡的灰色背景 */
+        li:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <h1>數據列表</h1>
+    <div id="update-time" class="update-time">載入中...</div>
+    <ul id="data-list">
+        <div class="loading">正在獲取最新數據...</div>
+    </ul>
+
+    <script>
+        // 註冊 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker 註冊成功', reg))
+                    .catch(err => console.log('Service Worker 註冊失敗', err));
+            });
+        }
+
+        // 讀取資料
+        async function fetchData() {
+            try {
+                const response = await fetch('data.json?t=' + new Date().getTime());
+                const data = await response.json();
+                
+                const timeEl = document.getElementById('update-time');
+                const listEl = document.getElementById('data-list');
+                
+                // 格式化時間
+                const date = new Date(data.updated_at);
+                timeEl.textContent = '最後更新: ' + date.toLocaleString('zh-TW');
+                
+                // 渲染列表
+                listEl.innerHTML = '';
+                data.items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    listEl.appendChild(li);
+                });
+            } catch (error) {
+                console.error('讀取資料失敗:', error);
+                document.getElementById('data-list').innerHTML = '<li>讀取失敗，請確認資料格式或網路連線。</li>';
+            }
+        }
+
+        fetchData();
+        // 每 5 分鐘自動刷新一次
+        setInterval(fetchData, 300000);
+    </script>
+</body>
+</html>
