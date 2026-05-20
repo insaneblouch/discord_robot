@@ -14,8 +14,8 @@
                 const response = await fetch('data.json?t=' + new Date().getTime());
                 const data = await response.json();
                 
-                // 將 JSON 轉回字串並顯示在 pre 標籤中
-                document.getElementById('raw-data').textContent = JSON.stringify(data.items, null, 2);
+                // 將陣列內容用換行符號連接成純文字，不包含括號和引號
+                document.getElementById('raw-data').textContent = data.items.join('\n');
             } catch (error) {
                 document.getElementById('raw-data').textContent = '讀取失敗: ' + error.message;
             }
